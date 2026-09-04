@@ -9,7 +9,7 @@ namespace {
 	Ground* pGround;
 	const int CAMERA_HEIGHT = 8.0f;
 	XMFLOAT3 START_POS = { 15.0f, 0.75, 0.5f };
-	const float END_POS_X = 86.0f;
+	const float END_POS_X = 1000.0f;
 }
 
 //コンストラクタ

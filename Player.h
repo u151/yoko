@@ -28,6 +28,7 @@ private:
 	bool UpdateTurn();                                           // 回転処理、回転中ならtrue
 	void UpdateJump();                                           // ジャンプ・重力処理
 	void ResolveWallCollision(XMVECTOR& pos, const XMVECTOR& move); // 壁当たり判定
+	void CheckBrickCollision();
 	int hWalkModel_;
 	int hIdleModel_;//待機アニメーションのモデルハンドル
 	Ground* ground_;//地面オブジェクトのポインタ

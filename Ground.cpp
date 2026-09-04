@@ -46,7 +46,7 @@ void Ground::Update()
 
 void Ground::Draw()
 {
-	for(int i = 0;i < 3; i++) {
+	for(int i = 0;i < 50; i++) {
 		transform_.position_ = { GROUND_WIDTH / 2.0f + GROUND_WIDTH * i, GROUND_Y, GROUND_Z };
 		transform_.rotate_ = { GROUND_ROTATE_X, 0.0f, 0.0f };
 		Model::SetTransform(hModel_, transform_);
