@@ -36,6 +36,7 @@ void Ground::Initialize()
 {
 	hModel_ = Model::Load("jimen3.fbx");
 	hModelt_ = Model::Load("BrickG.fbx");
+	hModelk_ = Model::Load("fbxflag.fbx");
 	//hEsaModel_ = Model::Load("esa.fbx");
 	//hPEsaModel_ = Model::Load("Poweresa.fbx");
 }
@@ -60,6 +61,16 @@ void Ground::Draw()
 				tr.position_ = { i * BLOCK_INTERVAL_X, (mapHeight_ - 1 - j) * BLOCK_INTERVAL_Y, 0.0f };
 				Model::SetTransform(hModelt_, tr);
 				Model::Draw(hModelt_);
+			}
+		}
+	}
+	for (int j = 0;j < mapHeight_;j++) {
+		for (int i = 0;i < mapWidth_;i++) {
+			if (mapData_[j][i] == 2) {
+				Transform tr;
+				tr.position_ = { i * BLOCK_INTERVAL_X, (mapHeight_ - 1 - j) * BLOCK_INTERVAL_Y, 0.0f };
+				Model::SetTransform(hModelk_, tr);
+				Model::Draw(hModelk_);
 			}
 		}
 	}

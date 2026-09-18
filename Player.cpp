@@ -4,20 +4,21 @@
 #include "TestScene.h"
 #include "Engine/Input.h"
 #include "Ground.h"
+#include "Engine/SceneManager.h"
 #include <cmath>
 
 namespace
 {
 	//定数
-	const float MAX_SPEED = 10.0f;						//最大移動速度
-	const float BASE_SPEED = 10.0f;						//アニメ速度1.0の基準速度
+	const float MAX_SPEED = 0.1f;						//最大移動速度
+	const float BASE_SPEED = 0.5f;						//アニメ速度1.0の基準速度
 	const float ACCELERATION = 0.005f;					//加速度
 	const float FRICTION = 0.008f;						//摩擦（減速度）
 	const float BRAKE = 0.02f;							//逆入力ブレーキ
 	const float TURN_FRAME = 10.0f;						//回転にかかるフレーム数
 	const float BLOCK_SIZE = 2.0f;						//1マスのワールドサイズ
 	const XMFLOAT3 START_POS = { 15.0f, 0.75f, 0.5f };	//初期位置
-	const float JUMP_POWER = 0.2f;						//ジャンプ初速
+	const float JUMP_POWER = 0.3f;						//ジャンプ初速
 	const float GRAVITY    = 0.01f;						//重力加速度
 	const float AIR_CONTROL = 0.5f;						//空中での入力の重み(地上比)
 	
@@ -134,6 +135,7 @@ void Player::Update()
 	//ResolveWallCollision(pos, move);
 
 	CheckBrickCollision();
+	CheckFlagCollision();
 }
 
 bool Player::HandleInput()
@@ -145,7 +147,7 @@ bool Player::HandleInput()
 	{
 		if (currentSpeed == 0.0f && isGrounded)
 		{
-			if (Input::IsKey(DIK_LEFT))  { pdirection = PLAYER_LEFT;  pstate = PLAYER_WALK; }
+			if (Input::IsKey(DIK_LEFT))  {pdirection = PLAYER_LEFT;  pstate = PLAYER_WALK; }
 			if (Input::IsKey(DIK_RIGHT)) { pdirection = PLAYER_RIGHT; pstate = PLAYER_WALK; }
 		}
 		else
@@ -465,6 +467,105 @@ void Player::CheckBrickCollision()
 	transform_.position_ = playerPos;
 }
 
+void Player::CheckFlagCollision()
+{
+	if (ground_ == nullptr)
+	{
+		return;
+	}
+
+	std::vector<std::vector<int>> mapData = ground_->GetMapData();
+
+	if (mapData.empty() || mapData[0].empty())
+	{
+		return;
+	}
+
+	int mapWidth = static_cast<int>(mapData[0].size());
+	int mapHeight = static_cast<int>(mapData.size());
+
+	XMFLOAT3 playerPos = transform_.position_;
+
+	// Playerの当たり判定
+	float playerLeft = playerPos.x - PLAYER_HALF_X;
+	float playerRight = playerPos.x + PLAYER_HALF_X;
+	float playerBottom = playerPos.y - PLAYER_HALF_Y;
+	float playerTop = playerPos.y + PLAYER_HALF_Y;
+
+	// Playerの現在位置からCSV座標を求める
+	int centerX =
+		static_cast<int>(
+			(playerPos.x + BLOCK_SIZE / 2.0f) /
+			BLOCK_SIZE);
+
+	int centerY =
+		static_cast<int>(
+			(mapHeight - 1) -
+			(playerPos.y / BLOCK_INTERVAL_Y));
+
+	for (int y = centerY - 2; y <= centerY + 2; y++)
+	{
+		for (int x = centerX - 2; x <= centerX + 2; x++)
+		{
+			if (x < 0 || x >= mapWidth ||
+				y < 0 || y >= mapHeight)
+			{
+				continue;
+			}
+
+			// CSVの2 = 旗
+			if (mapData[y][x] != 2)
+			{
+				continue;
+			}
+
+			// 旗の座標
+			float flagX = x * BLOCK_SIZE;
+			float flagY =
+				(mapHeight - 1 - y) * BLOCK_INTERVAL_Y;
+
+			// 旗の当たり判定
+			const float FLAG_HALF_X = BLOCK_SIZE / 2.0f;
+			const float FLAG_HALF_Y = BLOCK_INTERVAL_Y / 2.0f;
+
+			float flagLeft = flagX - FLAG_HALF_X;
+			float flagRight = flagX + FLAG_HALF_X;
+			float flagBottom = flagY - FLAG_HALF_Y;
+			float flagTop = flagY + FLAG_HALF_Y;
+
+			// X方向
+			bool overlapX =
+				playerRight > flagLeft &&
+				playerLeft < flagRight;
+
+			// Y方向
+			bool overlapY =
+				playerTop > flagBottom &&
+				playerBottom < flagTop;
+
+			if (overlapX && overlapY)
+			{
+				// Player → TestScene
+				TestScene* pTestScene =
+					static_cast<TestScene*>(GetParent());
+
+				if (pTestScene != nullptr)
+				{
+					// TestScene → SceneManager
+					SceneManager* pSceneManager =
+						static_cast<SceneManager*>(pTestScene->GetParent());
+
+					if (pSceneManager != nullptr)
+					{
+						pSceneManager->ChangeScene(SCENE_ID_TITLE);
+					}
+				}
+
+				return;
+			}
+		}
+	}
+}
 void Player::Draw()
 {
 	if (pstate == PLAYER_STATE::PLAYER_IDLE)
